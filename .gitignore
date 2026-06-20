@@ -1,0 +1,32 @@
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Obsidian (local-only)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+
+# Build / venv (for MkDocs publishing)
+.venv/
+venv/
+__pycache__/
+*.pyc
+site/
+.cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local-only session state
+*.log
+!log.md
+session/
+drafts/
+
+# MkDocs
+mkdocs.yml.local
