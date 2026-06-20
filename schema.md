@@ -16,6 +16,21 @@ ideas, decisions, references, comparisons, personal essays, technical deep-dives
 This schema is **domain-flexible** — it does not lock BrainKu into one topic. Specialize
 tags and entity types below as the wiki grows.
 
+> **Obsidian is the IDE; the LLM is the programmer; the wiki is the codebase.**
+> In practice the human runs Obsidian on one side of the screen, the LLM agent on the
+> other. The LLM makes edits; the human browses the results in real time — following
+> links, checking the graph view, reading updated pages. This loop is what makes the
+> wiki feel alive.
+
+> **The schema is the key configuration file.** It is what makes the LLM a
+> disciplined wiki maintainer rather than a generic chatbot. It tells the agent how
+> the wiki is structured, what the conventions are, and what workflows to follow
+> when ingesting sources, answering questions, or maintaining the wiki.
+>
+> **You and the LLM co-evolve this over time as you figure out what works for your
+> domain.** Every couple of weeks, ask: "What worked, what didn't, what should we
+> change?" Update the schema together. The agent proposes; you decide.
+
 ## Architecture
 
 ```
@@ -147,6 +162,30 @@ Start with a small, focused set. Add new tags here BEFORE using them.
 **Rule:** every tag on a page must appear in this taxonomy. If a new tag is needed,
 add it here first, then use it. This prevents tag sprawl.
 
+## Page Types
+
+BrainKu has seven wiki page types. Each has a distinct role and shape. Pick the
+type that best matches the page's role, not what's easy.
+
+- **entity** — a notable entity (person, org, product, model, project).
+  Facts, dates, relationships, sources.
+- **concept** — an abstract topic or idea. Definition, current state, open
+  questions, related concepts.
+- **comparison** — a side-by-side analysis of 2+ entities or concepts.
+  Dimensions, verdicts, sources.
+- **query** — a filed query result worth keeping. Question, synthesis,
+  pages drawn from, caveats.
+- **summary** — a per-source summary page (one per raw file). The first thing
+  the agent creates during an ingest. Acts as the source's entry point in the
+  wiki and the anchor for downstream entity/concept updates.
+- **overview** — a higher-level page that frames a domain. "My health
+  overview", "AI research overview". Synthesizes summaries and entity pages
+  into a navigable landing page for a sub-area.
+- **synthesis** — a novel cross-cutting analysis that goes beyond what any
+  individual source says. "Why every 2024 model converged on MoE",
+  "Cross-reading Karpathy + Chollet on AGI timelines". The most valuable
+  page type — these are the insights you couldn't derive from any one source.
+
 ## Update Policy
 
 When new information conflicts with existing content:
@@ -160,6 +199,24 @@ When new information conflicts with existing content:
 
 When `log.md` exceeds 500 entries, rename it `log-YYYY.md` and start fresh. The agent
 should check log size during lint.
+
+## Workflow preferences
+
+BrainKu's ingest/query/lint workflows are templates, not laws. After using the
+wiki for a while, you'll develop preferences — for example:
+
+- **Source granularity** — do you prefer one summary per file, or one per chapter
+  / section? "Personally I prefer to ingest sources one at a time and stay involved"
+  vs "I batch-ingest many sources at once with less supervision" are both fine.
+- **Discussion depth** — should the agent pause after each ingest to discuss
+  takeaways, or just write the pages and let you review?
+- **Stale threshold** — 90 days is the default. Your domain may move faster
+  (finance, news) or slower (philosophy) and warrant different thresholds.
+- **Tag density** — do you want every page to have 3-5 tags, or are 1-2 enough?
+
+**Document your preferences in this file.** Future agents (and future you) will
+read the schema before doing anything; a clear "this is how I work" section saves
+endless re-derivation. Bump the `updated:` date at the top when you change this.
 
 ## Index Scaling
 

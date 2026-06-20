@@ -45,6 +45,12 @@ When the user provides a source (URL, file path, pasted text, dropped into `raw/
    concepts the source mentions. This is the difference between a growing wiki and duplicates.
 
 5. **Write or update wiki pages.**
+   - **First, write a per-source summary page** (gist's example flow: "writes a
+     summary page in the wiki"). One summary per source, type=`summary`, filed in
+     `entities/`, `concepts/`, or a top-level `summaries/` if you prefer. The
+     summary is the source's entry point in the wiki and the anchor for
+     downstream entity/concept updates. Update or create the summary even if
+     the rest of the ingest is trivial.
    - **New entity/concept:** create only if it meets Page Thresholds in `schema.md`
      (2+ source mentions OR central to one source). Every new page must link to ≥2 others.
    - **Existing page:** add new info, bump `updated:` date. If it contradicts existing
@@ -135,6 +141,10 @@ When the user asks to lint, health-check, or audit BrainKu:
     - **Promote mentioned-no-page concepts** — if a concept is referenced 2+ times but
       has no page, propose creating one.
     The linter surfaces these as a "Suggested next actions" section in its report.
+15. **Missing cross-references** — pages with fewer than 2 outbound `[[wikilinks]]`.
+    Per `schema.md`, every page must link to at least 2 others; pages that fall short
+    are isolated in the outbound direction (the discoverer lands on them but can't
+    continue). Different from `orphan_pages` (which is the inbound direction).
 
 ## Frontmatter spec
 
@@ -144,7 +154,7 @@ When the user asks to lint, health-check, or audit BrainKu:
 title: Page Title
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
-type: entity | concept | comparison | query | summary
+type: entity | concept | comparison | query | summary | synthesis | overview
 tags: [from taxonomy]
 sources: [raw/articles/source-name.md]
 confidence: high | medium | low   # optional
@@ -264,6 +274,12 @@ bun install -g https://github.com/tobi/qmd
 Use qmd as the search step in the Query workflow (step 2) and as an alternative
 to `search_files` in larger wikis. Fall back to the `index.md` catalog for small
 wikis where qmd is overkill.
+
+**Don't want to install qmd?** You can also build something simpler yourself —
+a naive grep-based or BM25 script over the wiki's markdown files. The LLM can
+help you vibe-code a one-off search script as the need arises. See
+[Karpathy's gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f#optional-cli-tools)
+for the original note.
 
 ## Tips and tricks (from the gist)
 

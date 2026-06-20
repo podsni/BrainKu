@@ -71,3 +71,59 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to enable it later without restructuring.
 - Pattern source: [Karpathy LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 - Agent playbook derived from: Hermes `research/llm-wiki` skill v2.2.0.
+
+## [0.3.0] - 2026-06-20
+
+### Added
+- **Lint category 15: Missing cross-references** — pages with <2 outbound
+  `[[wikilinks]]`. Per `schema.md`, every page must link to at least 2
+  others. Different from `orphan_pages` (which is the inbound direction).
+  MEDIUM severity. Configurable via `MIN_OUTBOUND_WIKILINKS` constant.
+- **Page types `synthesis` and `overview`** — added to `ALLOWED_TYPES` in
+  `scripts/lint.py`, to `schema.md § Page Types`, and to the frontmatter
+  spec in `AGENTS.md`. `synthesis` is a novel cross-cutting analysis that
+  goes beyond any individual source (the most valuable page type).
+  `overview` is a higher-level landing page that frames a sub-area.
+- **`Sources` section in `index.md`** — Karpathy's example categorizes the
+  index as "entities, concepts, sources, etc.". The new section lists
+  per-source summary pages and acts as a navigable entry point to the
+  raw/ collection.
+- **Index entry format with metadata** — `_(updated YYYY-MM-DD, N sources)_`
+  appended to each entry, plus optional `[low conf]` / `[contested]` markers.
+  Matches the gist's "a link, a one-line summary, and optionally metadata
+  like date or source count".
+- **`Overviews` and `Syntheses` sections in `index.md`** — separate from
+  generic `Comparisons` and `Queries` to match the new page types.
+- **"What you can use it for" section in `README.md`** — 5 example use
+  cases from the gist (Personal, Research, Reading a book, Business/team,
+  Competitive analysis etc.).
+- **"Obsidian is the IDE" quote** in `README.md` and `schema.md` —
+  the human-loop framing from the gist's intro.
+- **"Everything mentioned above is optional and modular" note** in
+  `README.md` — the closing principle from the gist's Note section.
+- **"Schema is the key configuration file" + co-evolution framing** in
+  `schema.md` — the gist emphasizes both: schema makes the LLM a
+  disciplined maintainer, and it co-evolves with the user over time.
+- **`Workflow preferences` section in `schema.md`** — the gist says "It's
+  up to you to develop the workflow that fits your style and document it
+  in the schema for future sessions." The new section gives concrete
+  examples (source granularity, discussion depth, stale threshold, tag
+  density).
+- **First-action summary page in Ingest** — the gist's example flow leads
+  with "writes a summary page in the wiki". The Ingest workflow now
+  makes this explicit: every source gets a per-source summary page
+  before entity/concept updates.
+- **Vibe-code-a-search-script note in qmd section** — the gist explicitly
+  offers this as an alternative to qmd for users who want something
+  simpler. The qmd section in `AGENTS.md` now links to it.
+- **`suggested_actions` enhanced** — surfaces two new action types:
+  "Add cross-references to `[[page]]`" (from missing_xrefs) and
+  "Either set confidence on `[[page]]` or find a second source" (from
+  single_source_no_conf).
+
+### Notes
+- This round was triggered by a request to re-read the source gist (75 lines,
+  12KB) line-by-line, not just trust the skill distillation. 8 distinct
+  gaps identified from the gist that weren't captured previously.
+- BrainKu is still empty (no sources ingested). All changes are docs +
+  tooling only.

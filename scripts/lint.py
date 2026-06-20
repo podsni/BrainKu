@@ -2,7 +2,7 @@
 """
 Karpathy LLM Wiki linter - programmatic health check.
 
-Covers all 14 lint categories from the llm-wiki skill:
+Covers all 15 lint categories from the llm-wiki gist:
   1.  Orphan pages (zero inbound links)
   2.  Broken wikilinks (with code-span stripping + case-insensitive matching)
   2b. Concepts mentioned but lacking their own page (referenced 2+ times)
@@ -18,6 +18,7 @@ Covers all 14 lint categories from the llm-wiki skill:
   12. Report findings grouped by severity
   13. Append a `lint | N issues found` entry to log.md
   14. Surface suggested next actions (new sources to find, new questions)
+  15. Missing cross-references (pages with < MIN_OUTBOUND_WIKILINKS outbound links)
 
 Usage:
     python3 scripts/lint.py /root/dev/BrainKu
@@ -55,8 +56,8 @@ EXEMPT_FROM_WIKI_CHECKS = META_FILES | COMPANION_FILES
 # Required frontmatter fields
 REQUIRED_FM = {"title", "created", "updated", "type", "tags", "sources"}
 
-# Allowed types
-ALLOWED_TYPES = {"entity", "concept", "comparison", "query", "summary", "schema", "meta"}
+# Allowed types (matches schema.md page types + LLM Wiki gist "wiki content" list)
+ALLOWED_TYPES = {"entity", "concept", "comparison", "query", "summary", "synthesis", "overview", "schema", "meta"}
 
 # Default allowed tag set (used only if no schema can be loaded)
 DEFAULT_ALLOWED_TAGS = {
@@ -74,6 +75,7 @@ DEFAULT_ALLOWED_TAGS = {
 STALE_DAYS = 90
 PAGE_LINE_LIMIT = 200
 LOG_ENTRY_LIMIT = 500
+MIN_OUTBOUND_WIKILINKS = 2  # Per schema.md: every page must link to >= 2 others
 
 # ---------- Parsing helpers ----------
 
@@ -331,6 +333,19 @@ def lint(wiki: dict) -> dict:
         if d["lines"] > PAGE_LINE_LIMIT and p not in EXEMPT_FROM_WIKI_CHECKS
     ]
 
+    # 15. Missing cross-references (pages with too few outbound wikilinks)
+    # Per schema.md: every page must link to >= 2 others. Pages that fall short
+    # are isolated in the outbound direction - they have no discovery path
+    # leading OUT of them. Different from orphan_pages (no inbound).
+    missing_xrefs = []
+    for rel, d in docs.items():
+        if rel in EXEMPT_FROM_WIKI_CHECKS:
+            continue
+        outbound = len(set(m.group(1).strip().lower() for m in _WL_RE.finditer(d["scan"])))
+        if outbound < MIN_OUTBOUND_WIKILINKS:
+            missing_xrefs.append((rel, outbound))
+    missing_xrefs.sort(key=lambda x: x[1])
+
     # 11. Log rotation
     log_path = wiki["wiki_path"] / "log.md"
     log_count = 0
@@ -351,6 +366,7 @@ def lint(wiki: dict) -> dict:
         "single_source_no_conf": single_source_no_conf,
         "source_drift": drift,
         "big_pages": big,
+        "missing_xrefs": missing_xrefs,
         "log_entry_count": log_count,
         "log_needs_rotation": log_count > LOG_ENTRY_LIMIT,
     }
@@ -363,6 +379,7 @@ SEVERITY = [
     ("source_drift", "HIGH", "raw/ files with sha256 mismatch"),
     ("broken_wikilinks", "HIGH", "wikilinks pointing to non-existent pages"),
     ("mentioned_no_page", "MEDIUM", "concepts referenced 2+ times but lacking a page"),
+    ("missing_xrefs", "MEDIUM", f"pages with < {MIN_OUTBOUND_WIKILINKS} outbound wikilinks"),
     ("not_in_index", "MEDIUM", "wiki pages not listed in index.md"),
     ("orphan_pages", "MEDIUM", "pages with no inbound links"),
     ("fm_missing", "MEDIUM", "pages missing required frontmatter fields"),
@@ -428,6 +445,9 @@ def report(issues: dict, wiki: dict) -> int:
         elif key == "big_pages":
             for p, l in val:
                 print(f"  - {p}: {l} lines")
+        elif key == "missing_xrefs":
+            for p, n in val:
+                print(f"  - {p}: {n} outbound wikilink(s) (need >= {MIN_OUTBOUND_WIKILINKS})")
         elif key == "source_drift":
             for rel, actual, expected in val:
                 print(f"  X {rel}: got {actual[:12]}... expected {expected[:12]}...")
@@ -456,6 +476,16 @@ def suggested_actions(issues: dict, wiki: dict) -> list[str]:
         for tgt, n, _ in issues["mentioned_no_page"][:3]:
             actions.append(
                 f"Create page `[[{tgt}]]` (referenced {n}x but no page yet)."
+            )
+    if issues["missing_xrefs"]:
+        for rel, n in issues["missing_xrefs"][:2]:
+            actions.append(
+                f"Add cross-references to `[[{Path(rel).stem}]]` ({n} outbound; need >= {MIN_OUTBOUND_WIKILINKS})."
+            )
+    if issues["single_source_no_conf"]:
+        for rel in issues["single_source_no_conf"][:2]:
+            actions.append(
+                f"Either set confidence field on `[[{Path(rel).stem}]]` or find a second source."
             )
     if issues["low_confidence"]:
         for rel, c in issues["low_confidence"][:2]:
