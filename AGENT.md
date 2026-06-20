@@ -164,6 +164,16 @@ sha256: <hex digest of body>
   mean the author forgot to fill them in. Fix them; don't suppress.
 - **Page name convention: lowercase-hyphen.** `schema.md`, not `SCHEMA.md`. The uppercase
   form breaks cross-platform case-insensitive matching.
+- **Rotate the log when it exceeds 500 entries.** Rename to `log-YYYY.md` and start fresh.
+  The linter flags this; don't wait for the wiki to slow down before rotating.
+- **Meta files (`index.md`, `log.md`, `schema.md`, plus companion docs `README.md`,
+  `AGENT.md`, `GUIDE.md`, `CHANGELOG.md`, `scripts/README.md`) are not wiki content.**
+  They have no `sources:` field, don't appear in `index.md`, don't count as orphans,
+  and may legitimately exceed the 200-line size hint. The linter exempts them via
+  `EXEMPT_FROM_WIKI_CHECKS`. Don't lint them as if they were wiki pages.
+
+**See [`GUIDE.md` § Deployment pitfalls](GUIDE.md#deployment-pitfalls) for the two
+git/Unicode pitfalls that hit when bootstrapping the repo.**
 
 ## Bulk ingest
 

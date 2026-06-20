@@ -283,6 +283,104 @@ The published site is functional but plain. For an Obsidian-like experience
 
 ---
 
+## Obsidian Headless (servers and headless machines)
+
+On machines without a display, you can sync the BrainKu vault via Obsidian Sync
+without the desktop GUI — useful when the agent writes to the wiki on a server
+while Obsidian desktop reads it on another device.
+
+```bash
+# Requires Node.js 22+
+npm install -g obsidian-headless
+
+# Login (requires Obsidian account with Sync subscription)
+ob login --email <email> --password '<password>'
+
+# Create a remote vault
+ob sync-create-remote --name "BrainKu"
+
+# Connect the wiki directory
+cd /root/dev/BrainKu
+ob sync-setup --vault "<vault-id>"
+
+# Initial sync
+ob sync
+
+# Continuous sync (foreground — use systemd for background)
+ob sync --continuous
+```
+
+Continuous background sync via systemd:
+
+```ini
+# ~/.config/systemd/user/brainku-sync.service
+[Unit]
+Description=BrainKu Obsidian Sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/path/to/ob sync --continuous
+WorkingDirectory=/root/dev/BrainKu
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now brainku-sync
+sudo loginctl enable-linger $USER
+```
+
+Note: this requires an active Obsidian Sync subscription. For local-only reading,
+just open the directory as a vault in Obsidian desktop — no sync needed.
+
+---
+
+## Deployment pitfalls
+
+These bit during the BrainKu bootstrap and are documented for the next person who
+rebuilds the repo from scratch.
+
+### `gh repo create` crashes on Unicode in non-UTF-8 locales
+
+`gh` invokes Python internally. On systems with `LANG=C` / `POSIX` / `Latin-1`,
+any non-ASCII character in `--description` (em-dash `—`, smart quote `"`, CJK)
+raises `UnicodeEncodeError: 'latin-1' codec can't encode character ...` and
+**the repo is not created**.
+
+**Fix:**
+
+```bash
+# Either export UTF-8 first:
+export LANG=C.UTF-8 LC_ALL=C.UTF-8
+gh repo create <repo> --public \
+  --description "Plain ASCII or UTF-8 description" --source=. --push
+
+# Or write the description in plain ASCII only.
+```
+
+BrainKu's repo description uses no em-dashes for this reason.
+
+### Older `git` doesn't accept `-b <branch>` on `init`
+
+The `-b` flag was added in git 2.28 (July 2020). Minimal containers and older
+LTS distros may ship git < 2.28.
+
+**Fix (fallback that works on every git):**
+
+```bash
+git init
+git symbolic-ref HEAD refs/heads/main
+```
+
+BrainKu's bootstrap uses this fallback explicitly.
+
+---
+
 ## Troubleshooting
 
 ### "The agent created a duplicate page"
