@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Removed the `Publishing as a static site` section from `GUIDE.md`** per user
+  request. BrainKu ships as a local vault + GitHub repo only; the MkDocs/Material
+  publishing path is intentionally not part of this project. The 108-line section
+  covered MkDocs setup, GitHub Pages workflow, Obsidian-like UI plugins, and
+  mkdocs.yml examples. All removed; the deployment pitfalls section (Unicode gh
+  CLI, older git) is preserved as it's independent of MkDocs.
+
 ## [0.2.0] - 2026-06-20
 
 ### Added
