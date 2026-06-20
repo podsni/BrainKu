@@ -21,7 +21,7 @@ BrainKu/
 ├── schema.md          # conventions, structure, tag taxonomy
 ├── index.md           # catalog of every page
 ├── log.md             # chronological action log
-├── AGENT.md           # playbook for LLM agents
+├── AGENTS.md           # playbook for LLM agents
 ├── GUIDE.md           # full install + usage for every audience
 ├── README.md          # this file
 ├── raw/               # immutable source material

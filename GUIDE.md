@@ -30,7 +30,7 @@ already there when you ask a question.
 
 1. **`raw/`** — immutable source material (articles, papers, transcripts).
 2. **Wiki pages** — agent-owned markdown (entities, concepts, comparisons, queries).
-3. **Schema + playbook** — `schema.md` + `AGENT.md`. Co-evolved by human + agent.
+3. **Schema + playbook** — `schema.md` + `AGENTS.md`. Co-evolved by human + agent.
 
 ---
 
@@ -146,13 +146,13 @@ If you are an LLM agent (Hermes, Codex, Claude Code, OpenCode) maintaining Brain
    read_file BrainKu/log.md offset=last 30
    ```
 
-2. **For an ingest**, see `AGENT.md` § Operations → 1. Ingest.
+2. **For an ingest**, see `AGENTS.md` § Operations → 1. Ingest.
 
-3. **For a query**, see `AGENT.md` § Operations → 2. Query.
+3. **For a query**, see `AGENTS.md` § Operations → 2. Query.
 
-4. **For a lint**, see `AGENT.md` § Operations → 3. Lint.
+4. **For a lint**, see `AGENTS.md` § Operations → 3. Lint.
 
-5. **Read `AGENT.md` Pitfalls** before doing anything. The pitfalls section is dense
+5. **Read `AGENTS.md` Pitfalls** before doing anything. The pitfalls section is dense
    because they're all real bugs we've hit.
 
 6. **When in doubt, ask the user.** Mass-updates, schema changes, and tag additions
@@ -205,7 +205,7 @@ BrainKu/
     ├── schema.md
     ├── catalog.md              # was index.md — renamed to avoid clash
     ├── log.md
-    ├── AGENT.md
+    ├── AGENTS.md
     ├── GUIDE.md                # this file
     ├── entities/
     ├── concepts/
@@ -233,7 +233,7 @@ pip install mkdocs mkdocs-material pymdown-extensions
 
 # 3. Move wiki content to docs/
 mkdir -p docs
-mv schema.md index.md log.md AGENT.md GUIDE.md README.md entities concepts comparisons queries raw _meta docs/
+mv schema.md index.md log.md AGENTS.md GUIDE.md README.md entities concepts comparisons queries raw _meta docs/
 mv docs/index.md docs/catalog.md
 cat > docs/index.md <<'EOF'
 # BrainKu
@@ -243,7 +243,7 @@ Welcome. This is the published view of the BrainKu knowledge base.
 Browse the [catalog](catalog.md) for the full index, or jump to:
 - [Schema](schema.md)
 - [Recent activity](log.md)
-- [Agent playbook](AGENT.md)
+- [Agent playbook](AGENTS.md)
 EOF
 
 # 4. Preview locally
@@ -432,6 +432,6 @@ exceeds 200 entries total, create `_meta/topic-map.md`.
 - [`schema.md`](schema.md) — conventions, structure, tag taxonomy
 - [`index.md`](index.md) — the catalog
 - [`log.md`](log.md) — chronological action log
-- [`AGENT.md`](AGENT.md) — agent playbook
+- [`AGENTS.md`](AGENTS.md) — agent playbook
 - [Karpathy LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — the pattern source
 - Hermes `llm-wiki` skill — operational playbook + MkDocs templates

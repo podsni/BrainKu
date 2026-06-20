@@ -23,7 +23,7 @@ BrainKu/
 ├── schema.md             # this file (conventions, structure, tags)
 ├── index.md              # catalog of every page with one-line summaries
 ├── log.md                # chronological action log (append-only)
-├── AGENT.md              # operational playbook for LLM agents
+├── AGENTS.md              # operational playbook for LLM agents
 ├── GUIDE.md              # install + usage for every audience
 ├── README.md             # human-facing overview
 ├── raw/                  # Layer 1: IMMUTABLE source material
@@ -44,7 +44,7 @@ BrainKu/
 
 1. **Raw sources** — immutable. The agent reads but NEVER modifies.
 2. **The wiki** — agent-owned markdown. Created, updated, cross-referenced.
-3. **The schema** — this file + `AGENT.md`. Co-evolved by human + agent.
+3. **The schema** — this file + `AGENTS.md`. Co-evolved by human + agent.
 
 ## Conventions
 
@@ -60,7 +60,7 @@ BrainKu/
   a wiki page that supersedes it.
 - **Raw body byte-exact:** the body of a raw file (everything after the second `---`) must
   be byte-exact with the original source. Compute sha256 of the body and store in frontmatter.
-  See `AGENT.md` for the full ingest procedure.
+  See `AGENTS.md` for the full ingest procedure.
 
 ## Frontmatter (wiki pages)
 

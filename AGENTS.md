@@ -1,4 +1,4 @@
-# AGENT.md — BrainKu Agent Playbook
+# AGENTS.md — BrainKu Agent Playbook
 
 > Operational playbook for LLM agents (Hermes, Codex, Claude Code, OpenCode, etc.) maintaining BrainKu.
 > Read `schema.md` and `index.md` first, then this file.
@@ -82,6 +82,26 @@ When the user asks a question about BrainKu's domain:
    lookups — only answers that would be painful to re-derive.
 6. Update `log.md` with the query and whether it was filed.
 
+#### Output formats
+
+Answers can take different forms depending on the question. The gist's spec calls
+out these output formats — pick the one that matches the question, not the default:
+
+- **Markdown page** — the default. A wiki page synthesis, written in markdown with
+  `[[wikilinks]]`. File it in `queries/research/` if it's substantial.
+- **Comparison table** — when comparing 2+ entities/concepts side by side. Pipe tables
+  in markdown. File as a `comparisons/` page.
+- **Slide deck (Marp)** — for presentations. Use Marp frontmatter (`marp: true`) +
+  `---` separators for slides. File as a `.md` page in `queries/` or `_meta/`.
+- **Chart (matplotlib)** — for data-driven questions. Generate a `.png` via Python's
+  matplotlib, save to `raw/assets/`, embed via `![[filename.png]]` in the wiki page.
+- **Canvas** — for freeform visual explanations (diagrams, flow charts). Use a
+  draw.io XML file saved to `raw/assets/canvas.drawio`, or a Mermaid block embedded
+  in the wiki page directly.
+
+When in doubt, default to markdown. The other formats are upgrades for specific
+question shapes.
+
 ### 3. Lint
 
 When the user asks to lint, health-check, or audit BrainKu:
@@ -107,6 +127,14 @@ When the user asks to lint, health-check, or audit BrainKu:
 11. **Log rotation** — if `log.md` exceeds 500 entries, rotate it.
 12. **Report findings** grouped by severity (broken links > orphans > drift > contested > stale > style).
 13. **Append to `log.md`:** `## [YYYY-MM-DD] lint | N issues found`.
+14. **Suggest next actions** — from the findings, suggest:
+    - **New sources to look for** — pages that have low confidence / single source / stale
+      content. The agent should propose web searches to fill the gaps.
+    - **New questions to investigate** — gaps in the wiki that would benefit from a
+      targeted query.
+    - **Promote mentioned-no-page concepts** — if a concept is referenced 2+ times but
+      has no page, propose creating one.
+    The linter surfaces these as a "Suggested next actions" section in its report.
 
 ## Frontmatter spec
 
@@ -167,7 +195,7 @@ sha256: <hex digest of body>
 - **Rotate the log when it exceeds 500 entries.** Rename to `log-YYYY.md` and start fresh.
   The linter flags this; don't wait for the wiki to slow down before rotating.
 - **Meta files (`index.md`, `log.md`, `schema.md`, plus companion docs `README.md`,
-  `AGENT.md`, `GUIDE.md`, `CHANGELOG.md`, `scripts/README.md`) are not wiki content.**
+  `AGENTS.md`, `GUIDE.md`, `CHANGELOG.md`, `scripts/README.md`) are not wiki content.**
   They have no `sources:` field, don't appear in `index.md`, don't count as orphans,
   and may legitimately exceed the 200-line size hint. The linter exempts them via
   `EXEMPT_FROM_WIKI_CHECKS`. Don't lint them as if they were wiki pages.
@@ -212,3 +240,81 @@ For best results:
 - Enable "Wikilinks" in Obsidian settings (default on).
 - Install Dataview plugin for queries like
   `TABLE tags FROM "entities" WHERE contains(tags, "entity")`.
+
+## qmd (recommended search tool)
+
+When the wiki grows past ~hundreds of pages, the `index.md` catalog alone is no
+longer enough. The gist recommends **[qmd](https://github.com/tobi/qmd)** — a
+local search engine for markdown files with hybrid BM25 + vector search + LLM
+re-ranking, all on-device.
+
+- **CLI** — so the agent can shell out: `qmd search "transformer architecture"`
+- **MCP server** — so the agent can use it as a native tool (preferred when
+  running in Hermes or Claude Code)
+- **All on-device** — no cloud, no API keys, no embeddings database to manage
+
+Install:
+
+```bash
+# qmd requires Bun
+curl -fsSL https://bun.sh/install | bash
+bun install -g https://github.com/tobi/qmd
+```
+
+Use qmd as the search step in the Query workflow (step 2) and as an alternative
+to `search_files` in larger wikis. Fall back to the `index.md` catalog for small
+wikis where qmd is overkill.
+
+## Tips and tricks (from the gist)
+
+These are workflow tips from the source spec that the agent should know about.
+The first three are user-facing; the rest are mostly agent-facing.
+
+- **Obsidian Web Clipper** is a browser extension that converts web articles to
+  clean markdown. Use it to drop new sources directly into `raw/articles/`. The
+  agent then ingests from there.
+- **Download images locally.** In Obsidian Settings → Files and links, set
+  "Attachment folder path" to `raw/assets/`. Bind "Download attachments for
+  current file" to a hotkey (e.g. Ctrl+Shift+D). After clipping an article, hit
+  the hotkey and all images get downloaded to local disk. The LLM can then read
+  the text first, then view some/all of the referenced images separately to
+  gain additional context. It's a bit clunky but works well enough.
+- **Obsidian's graph view** is the best way to see the shape of the wiki —
+  what's connected to what, which pages are hubs, which are orphans.
+- **Marp** is a markdown-based slide deck format. Obsidian has a plugin for it.
+  Useful when a query answer should be a presentation rather than a wiki page.
+- **Dataview** is an Obsidian plugin that runs queries over page frontmatter. If
+  the agent adds YAML frontmatter consistently (tags, dates, source counts),
+  Dataview can generate dynamic tables and lists. The LLM doesn't run Dataview,
+  but the human can.
+- **The wiki is just a git repo.** You get version history, branching, and
+  collaboration for free. The agent should commit after every meaningful batch
+  of changes.
+- **`grep '^## \[' log.md | tail -5`** gives you the last 5 log entries with
+  simple unix tools. The `## [YYYY-MM-DD] action | subject` prefix is
+  intentionally parseable so the log is greppable without a custom parser.
+
+## Why this works (and a historical note)
+
+From the gist's closing section, with the historical context preserved.
+
+The tedious part of maintaining a knowledge base is not the reading or the
+thinking — it's the bookkeeping. Updating cross-references, keeping summaries
+current, noting when new data contradicts old claims, maintaining consistency
+across dozens of pages. Humans abandon wikis because the maintenance burden
+grows faster than the value. LLMs don't get bored, don't forget to update a
+cross-reference, and can touch 15 files in one pass. The wiki stays maintained
+because the cost of maintenance is near zero.
+
+The human's job is to curate sources, direct the analysis, ask good questions,
+and think about what it all means. The LLM's job is everything else.
+
+**Historical context — Vannevar Bush's Memex (1945).** The idea is related in
+spirit to Bush's Memex — a personal, curated knowledge store with associative
+trails between documents. Bush's vision was closer to this pattern than to
+what the web became: private, actively curated, with the connections between
+documents as valuable as the documents themselves. The part he couldn't solve
+was who does the maintenance. The LLM handles that.
+
+Consider creating a `concepts/memex.md` page if your domain intersects with
+knowledge-management history.

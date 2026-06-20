@@ -2,9 +2,10 @@
 """
 Karpathy LLM Wiki linter - programmatic health check.
 
-Covers all 13 lint categories from the llm-wiki skill:
+Covers all 14 lint categories from the llm-wiki skill:
   1.  Orphan pages (zero inbound links)
   2.  Broken wikilinks (with code-span stripping + case-insensitive matching)
+  2b. Concepts mentioned but lacking their own page (referenced 2+ times)
   3.  Index completeness
   4.  Frontmatter validation (required fields, tags in taxonomy)
   5.  Stale content (updated > 90 days older than most-recent source)
@@ -16,6 +17,7 @@ Covers all 13 lint categories from the llm-wiki skill:
   11. Log rotation (>500 entries)
   12. Report findings grouped by severity
   13. Append a `lint | N issues found` entry to log.md
+  14. Surface suggested next actions (new sources to find, new questions)
 
 Usage:
     python3 scripts/lint.py /root/dev/BrainKu
@@ -43,7 +45,7 @@ META_FILES = {"index.md", "log.md", "schema.md", "SCHEMA.md"}
 # These are the recommended companions from the llm-wiki skill (README/AGENT/GUIDE)
 # plus this project's own CHANGELOG and scripts/README.
 COMPANION_FILES = {
-    "README.md", "AGENT.md", "GUIDE.md", "CHANGELOG.md",
+    "README.md", "AGENTS.md", "GUIDE.md", "CHANGELOG.md",
     "scripts/README.md",
 }
 
@@ -228,6 +230,19 @@ def lint(wiki: dict) -> dict:
         if tgt.lower() not in page_names
     ]
 
+    # 2b. Concepts mentioned but lacking their own page (Karpathy's lint §Lint)
+    # Count broken-wikilink targets and surface those referenced >=2 times.
+    # Filter out obvious placeholders and single-character noise.
+    mentioned_no_page: list[tuple[str, int, list[str]]] = []
+    for tgt, srcs in broken:
+        if len(tgt) < 2:
+            continue
+        if tgt.lower() in {"page-a", "page-b", "xxx", "todo", "fixme", "tbd", "tba"}:
+            continue
+        if len(srcs) >= 2:
+            mentioned_no_page.append((tgt, len(srcs), srcs[:3]))
+    mentioned_no_page.sort(key=lambda x: -x[1])
+
     # 3. Index completeness - every page should appear in index.md
     index_text = ""
     index_path = wiki["wiki_path"] / "index.md"
@@ -325,6 +340,7 @@ def lint(wiki: dict) -> dict:
     return {
         "broken_wikilinks": broken,
         "orphan_pages": orphans,
+        "mentioned_no_page": mentioned_no_page,
         "not_in_index": not_in_index,
         "fm_missing": fm_missing,
         "fm_invalid_type": fm_invalid_type,
@@ -346,6 +362,7 @@ def lint(wiki: dict) -> dict:
 SEVERITY = [
     ("source_drift", "HIGH", "raw/ files with sha256 mismatch"),
     ("broken_wikilinks", "HIGH", "wikilinks pointing to non-existent pages"),
+    ("mentioned_no_page", "MEDIUM", "concepts referenced 2+ times but lacking a page"),
     ("not_in_index", "MEDIUM", "wiki pages not listed in index.md"),
     ("orphan_pages", "MEDIUM", "pages with no inbound links"),
     ("fm_missing", "MEDIUM", "pages missing required frontmatter fields"),
@@ -381,6 +398,9 @@ def report(issues: dict, wiki: dict) -> int:
         elif key == "orphan_pages":
             for p in val:
                 print(f"  X {p}")
+        elif key == "mentioned_no_page":
+            for tgt, n, srcs in val:
+                print(f"  - [[{tgt}]] referenced {n}x; example: {srcs[0]}")
         elif key == "not_in_index":
             for p in val:
                 print(f"  X {p}")
@@ -418,7 +438,45 @@ def report(issues: dict, wiki: dict) -> int:
     else:
         print(f"{total} ISSUES")
     print("=" * 60)
+
+    # Suggested next actions (lint category 14)
+    actions = suggested_actions(issues, wiki)
+    if actions:
+        print("\nSuggested next actions:")
+        for line in actions:
+            print(f"  - {line}")
+
     return total
+
+
+def suggested_actions(issues: dict, wiki: dict) -> list[str]:
+    """Lint category 14: propose next actions from the findings."""
+    actions: list[str] = []
+    if issues["mentioned_no_page"]:
+        for tgt, n, _ in issues["mentioned_no_page"][:3]:
+            actions.append(
+                f"Create page `[[{tgt}]]` (referenced {n}x but no page yet)."
+            )
+    if issues["low_confidence"]:
+        for rel, c in issues["low_confidence"][:2]:
+            actions.append(
+                f"Search for more sources to back `[[{Path(rel).stem}]]` "
+                f"(confidence={c})."
+            )
+    if issues["stale_pages"]:
+        for rel, u in issues["stale_pages"][:2]:
+            actions.append(
+                f"Refresh `[[{Path(rel).stem}]]` (last updated {u})."
+            )
+    if issues["source_drift"]:
+        actions.append(
+            "Re-ingest raw/ sources with sha256 drift (do not hand-edit the body)."
+        )
+    if issues["contested"]:
+        actions.append(
+            f"Reconcile {len(issues['contested'])} contested page(s) — surface both claims."
+        )
+    return actions
 
 
 def append_log_entry(wiki_path: Path, n: int) -> None:

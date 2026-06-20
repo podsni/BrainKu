@@ -30,7 +30,7 @@ _(none yet)_
 
 BrainKu is empty. To populate it, ingest a source. Drop the raw file into
 `raw/articles/`, `raw/papers/`, or `raw/transcripts/`, then ask the agent to
-process it. See `AGENT.md` for the full ingest procedure.
+process it. See `AGENTS.md` for the full ingest procedure.
 
 First sources to consider (personal knowledge base starter pack):
 
