@@ -76,7 +76,7 @@ When the user asks a question about BrainKu's domain:
 2. For wikis with 100+ pages, also `search_files` across all `.md` for key terms.
 3. Read the relevant pages.
 4. Synthesize an answer from the compiled knowledge. Cite wiki pages: "Based on
-   [[page-a]] and [[page-b]]..."
+   `[[page-a]]` and `[[page-b]]`..." (real wikilinks, not placeholders)
 5. **File valuable answers back** — if the answer is a substantial comparison, deep dive,
    or novel synthesis, create a page in `queries/` or `comparisons/`. Don't file trivial
    lookups — only answers that would be painful to re-derive.
