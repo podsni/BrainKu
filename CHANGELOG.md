@@ -127,3 +127,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   gaps identified from the gist that weren't captured previously.
 - BrainKu is still empty (no sources ingested). All changes are docs +
   tooling only.
+
+## [0.3.1] - 2026-06-20
+
+### Changed
+- **Rewrote `README.md` as a comprehensive landing page (104 -> 484 LOC).**
+  Added table of contents, 3-layer architecture with diagram, full annotated
+  layout, the seven page types, the three workflows (Ingest/Query/Lint), the
+  15 linter categories table, schema-as-key-config-file section, Obsidian
+  integration deep-dive (desktop + headless), optional tools, companion docs
+  index, customization guide, requirements, Memex historical context. The
+  README is now self-contained — a visitor can understand BrainKu end-to-end
+  without reading any other file.
